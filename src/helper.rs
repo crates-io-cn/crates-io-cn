@@ -1,5 +1,6 @@
 use hyper::header;
 use hyper::Client;
+use hyper::client::connect::HttpConnector;
 use hyper_tls::HttpsConnector;
 use http_body::Body as _;
 
@@ -22,6 +23,13 @@ pub struct Crate {
     pub notify: watch::Receiver<usize>,
 }
 
+lazy_static! {
+    static ref CLIENT: hyper::Client<HttpsConnector<HttpConnector>, hyper::Body> = {
+        let https = HttpsConnector::new();
+        Client::builder().build(https)
+    };
+}
+
 impl Crate {
     pub async fn new(name: String, ver: String) -> Option<Arc<Self>> {
         let uri = format!(
@@ -32,10 +40,7 @@ impl Crate {
         .parse()
         .ok()?;
 
-        let https = HttpsConnector::new();
-        let client = Client::builder().build::<_, hyper::Body>(https);
-
-        let mut resp = client.get(uri).await.ok()?;
+        let mut resp = CLIENT.get(uri).await.ok()?;
         // Only 200 code is acceptable in this situation, 3xx is not acceptable and should never happen
         if resp.status() != 200 {
             warn!("upstream error: {}", resp.status());
