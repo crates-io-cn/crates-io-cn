@@ -50,7 +50,7 @@ def main():
         for ver in os.listdir(os.path.join('/mirror_nfs/crates', crate)):
             task_pool.put((crate, ver))
     task_pool.close()
-    task_pool.join_thread()
+    task_pool.join()
     success_queue.close()
     failure_queue.close()
     for worker in workers:
