@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 from hashlib import sha256
 from mmap import mmap, PROT_READ
@@ -34,7 +35,7 @@ def success_comsumer():
 def failure_comsumer():
     while True:
         crate, ver, checksum, expected = failure_queue.get()
-        print(f'{crate}-{ver}: fail, {checksum} != {expected}')
+        tqdm.write(f'{crate}-{ver}: fail, {checksum} != {expected}', file=sys.stderr)
         failure_queue.task_done()
 
 def main():
