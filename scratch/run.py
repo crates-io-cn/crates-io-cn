@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 from multiprocessing import Pool
 from queue import Queue
@@ -37,34 +38,31 @@ def success_comsumer():
 def failure_comsumer():
     while True:
         key = failure_queue.get()
-        print(f'{key}: fail')
+        tqdm.write(f'{key}: fail', file=sys.stderr)
         failure_queue.task_done()
 
 def main():
     workers = [threading._start_new_thread(download, tuple()) for i in range(32)]
     workers.append(threading._start_new_thread(success_comsumer, tuple()))
     workers.append(threading._start_new_thread(failure_comsumer, tuple()))
-    for root, _, crates in tqdm(os.walk('/mirror_nfs/crates.io-index'), ncols=80):
+    prefix = '/mirror_nfs/crates.io-index'
+    for root, _, crates in tqdm(os.walk(prefix), ncols=80, total=14690):
         if '.git' in root:
             continue
-        for crate in tqdm(crates, desc=root, leave=False, ncols=80):
+        for crate in tqdm(crates, desc=root[len(prefix):], leave=False, ncols=80):
             if crate.endswith('json'):
                 continue
             try:
                 checkouts = [json.loads(line) for line in open(os.path.join(root, crate)).readlines()]
                 keys = [f'{checkout["name"]}/{checkout["vers"]}' for checkout in checkouts if not checkout["yanked"]]
-                keys = [key for key in keys if os.path.isfile(f'/mirror_nfs/crates/{key}')]
+                #keys = [key for key in keys if os.path.isfile(f'/mirror_nfs/crates/{key}')]
+                keys = [key for key in keys if not key in history]
                 for key in keys:
                     task_pool.put(key)
             except Exception as e:
-                print(os.path.join(root, crate))
-                print(e)
-    task_pool.close()
-    task_pool.join_thread()
-    success_queue.close()
-    failure_queue.close()
-    for worker in workers:
-        worker.terminate()
+                tqdm.write(os.path.join(root, crate), file=sys.stderr)
+                tqdm.write(e, file=sys.stderr)
+    task_pool.join()
     success_queue.join()
     failure_queue.join()
             
@@ -74,6 +72,5 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         checkpoint.close()
-        task_pool.close()
-        success_queue.close()
-        failure_queue.close()
+        success_queue.join()
+        failure_queue.join()
