@@ -1,13 +1,8 @@
-use std::sync::Arc;
 use bytes::{Bytes, BytesMut};
-use futures::Stream;
-use futures::task::Context;
 use serde::Deserialize;
-use tokio::macros::support::{Pin, Poll};
-use tokio::sync::{watch, mpsc, RwLock};
+use std::sync::Arc;
 use tokio::stream::StreamExt;
-use actix_http::Response;
-use actix_http::body::Body;
+use tokio::sync::{mpsc, watch, RwLock};
 
 use crate::error::Error;
 use crate::ACTIVE_DOWNLOADS;
@@ -37,7 +32,7 @@ pub struct Crate {
 impl Crate {
     pub async fn create(krate_req: CrateReq) -> Result<Arc<Self>, Error> {
         if let Some(krate) = ACTIVE_DOWNLOADS.read().await.get(&krate_req) {
-            return Ok(krate.clone())
+            return Ok(krate.clone());
         }
         let mut guard = ACTIVE_DOWNLOADS.write().await;
         let CrateReq { name, version } = krate_req.clone();
@@ -52,11 +47,18 @@ impl Crate {
         let krate = Self {
             name,
             version,
-            content_type: resp.headers().get("content-type").ok_or_else(|| Error::MissingField)?.to_str()?.to_string(),
+            content_type: resp
+                .headers()
+                .get("content-type")
+                .ok_or_else(|| Error::MissingField)?
+                .to_str()?
+                .to_string(),
             content_length,
-            buffer: Arc::new(RwLock::new(BytesMut::with_capacity(content_length as usize))),
+            buffer: Arc::new(RwLock::new(BytesMut::with_capacity(
+                content_length as usize,
+            ))),
             notify: rx,
-            ptr: 0
+            ptr: 0,
         };
         let write_buffer = krate.buffer.clone();
         tokio::spawn(async move {
@@ -77,7 +79,7 @@ impl Crate {
             // TODO: Upload to upyun
         });
         guard.insert(krate_req.clone(), Arc::new(krate));
-        return Ok(guard.get(&krate_req).unwrap().clone())
+        Ok(guard.get(&krate_req).unwrap().clone())
     }
 
     pub fn tee(&self, tx: mpsc::UnboundedSender<Result<Bytes, ()>>) {

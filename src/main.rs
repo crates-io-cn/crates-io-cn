@@ -3,11 +3,10 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 
+use actix_web::middleware::Logger;
+use actix_web::{get, web, App, HttpResponse, HttpServer};
 use std::collections::HashMap;
 use std::sync::Arc;
-use actix_web::body::Body;
-use actix_web::middleware::Logger;
-use actix_web::{get, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use tokio::sync::{mpsc, RwLock};
 
 mod error;
