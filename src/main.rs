@@ -31,12 +31,20 @@ lazy_static! {
 #[get("/sync/{crate}/{version}")]
 async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
     format!("{:?}", krate_req);
-    let task = Crate::create(krate_req).await.unwrap();
-    let (tx, rx) = mpsc::unbounded_channel::<Result<bytes::Bytes, ()>>();
-    task.tee(tx);
-    HttpResponse::Ok()
-        .content_type("application/x-tar")
-        .streaming(rx)
+    match Crate::create(krate_req).await {
+        Err(e) => {
+            error!("{}", e);
+            HttpResponse::NotFound().finish()
+        },
+        Ok(krate) => {
+            let (tx, rx) = mpsc::unbounded_channel::<Result<bytes::Bytes, ()>>();
+            krate.tee(tx);
+            HttpResponse::Ok()
+                .content_type("application/x-tar")
+                .streaming(rx)
+        }
+    }
+
 }
 
 #[actix_web::main]

@@ -5,4 +5,5 @@ pub enum Error {
     Reqwest(reqwest::Error),
     Header(reqwest::header::ToStrError),
     MissingField,
+    FetchFail
 }

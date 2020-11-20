@@ -6,6 +6,7 @@ use tokio::sync::{mpsc, watch, RwLock};
 
 use crate::error::Error;
 use crate::ACTIVE_DOWNLOADS;
+use reqwest::StatusCode;
 
 #[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
 pub struct CrateReq {
@@ -42,6 +43,9 @@ impl Crate {
             version = version
         );
         let resp = CLIENT.get(&uri).send().await?;
+        if resp.status() != StatusCode::OK {
+            return Err(Error::FetchFail)
+        }
         let content_length = resp.content_length().ok_or_else(|| Error::MissingField)? as usize;
         let (tx, rx) = watch::channel(0);
         let krate = Self {
