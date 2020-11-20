@@ -1,0 +1,27 @@
+[package]
+name = "upyun"
+version = "0.1.0"
+authors = ["lightsing <light.tsing@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+derive_more = "0.99"
+lazy_static = "1.4"
+serde_json = "1.0"
+chrono = "0.4"
+bytes = "0.5"
+hex = "0.4"
+base64 = "0.13"
+
+[dependencies.phf]
+version = "0.8"
+features = ["macros"]
+
+[dependencies.reqwest]
+version = "0.10"
+features = ["stream", "json"]
+
+[dev-dependencies]
+tokio = "0.2"
+env_logger = "0.8"
