@@ -50,6 +50,7 @@ async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     log4rs::init_file("config/log4rs.yml", Default::default()).unwrap();
+    dotenv::dotenv().ok();
     HttpServer::new(|| App::new().wrap(Logger::default()).service(sync))
         .bind("127.0.0.1:8080")?
         .run()
