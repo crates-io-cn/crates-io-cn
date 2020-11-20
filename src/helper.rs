@@ -1,3 +1,4 @@
+use std::env;
 use bytes::{Bytes, BytesMut};
 use serde::Deserialize;
 use std::sync::Arc;
@@ -7,6 +8,8 @@ use tokio::sync::{mpsc, watch, RwLock};
 use crate::error::Error;
 use crate::ACTIVE_DOWNLOADS;
 use reqwest::StatusCode;
+use upyun::{Operator, Upyun};
+use std::ops::Deref;
 
 #[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
 pub struct CrateReq {
@@ -17,6 +20,10 @@ pub struct CrateReq {
 
 lazy_static! {
     static ref CLIENT: reqwest::Client = reqwest::Client::new();
+    static ref UPYUN_NAME: &'static str = Box::leak(env::var("UPYUN_NAME").unwrap().into_boxed_str());
+    static ref UPYUN_TOKEN: &'static str = Box::leak(env::var("UPYUN_TOKEN").unwrap().into_boxed_str());
+    static ref UPYUN_BUCKET: &'static str = Box::leak(env::var("UPYUN_BUCKET").unwrap().into_boxed_str());
+    static ref UPYUN: Upyun = Upyun::new(Operator::new(&UPYUN_NAME, &UPYUN_TOKEN));
 }
 
 #[derive(Clone, Debug)]
@@ -42,6 +49,8 @@ impl Crate {
             name = name,
             version = version
         );
+        let key = format!("{}/{}", name, version);
+        let krate_req_key = krate_req.clone();
         let resp = CLIENT.get(&uri).send().await?;
         if resp.status() != StatusCode::OK {
             return Err(Error::FetchFail)
@@ -80,7 +89,12 @@ impl Crate {
                     }
                 };
             }
-            // TODO: Upload to upyun
+            let buffer = write_buffer.read().await.clone().freeze();
+            if let Err(e) = UPYUN.put_file(*UPYUN_BUCKET, &key, buffer).await {
+                error!("{}", e);
+            } else {
+                ACTIVE_DOWNLOADS.write().await.remove(&krate_req_key);
+            }
         });
         guard.insert(krate_req.clone(), Arc::new(krate));
         Ok(guard.get(&krate_req).unwrap().clone())
