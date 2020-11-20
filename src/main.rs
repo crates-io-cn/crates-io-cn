@@ -7,7 +7,7 @@ use actix_web::middleware::Logger;
 use actix_web::{get, web, App, HttpResponse, HttpServer};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{mpsc::unbounded_channel, RwLock};
 
 mod error;
 mod helper;
@@ -37,7 +37,7 @@ async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
             HttpResponse::NotFound().finish()
         },
         Ok(krate) => {
-            let (tx, rx) = mpsc::unbounded_channel::<Result<bytes::Bytes, ()>>();
+            let (tx, rx) = unbounded_channel::<Result<bytes::Bytes, ()>>();
             krate.tee(tx);
             HttpResponse::Ok()
                 .content_type("application/x-tar")
