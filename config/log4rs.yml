@@ -1,0 +1,13 @@
+refresh_rate: 30 seconds
+appenders:
+  stdout:
+    kind: console
+    encoder:
+      pattern: "{d(%Y-%m-%d %H:%M:%S%.3f)} {l:<5} [{T}] {M}: {m}{n}"
+root:
+  level: info
+  appenders:
+    - stdout
+loggers:
+  outlets_rs:
+    level: debug
