@@ -54,7 +54,7 @@ impl Crate {
         if resp.status() != StatusCode::OK {
             return Err(Error::FetchFail)
         }
-        let content_length = resp.content_length().ok_or_else(|| Error::MissingField)? as usize;
+        let content_length = resp.content_length().ok_or(Error::MissingField)? as usize;
         let (tx, rx) = watch::channel(0);
         let krate = Self {
             name,
@@ -62,7 +62,7 @@ impl Crate {
             content_type: resp
                 .headers()
                 .get("content-type")
-                .ok_or_else(|| Error::MissingField)?
+                .ok_or(Error::MissingField)?
                 .to_str()?
                 .to_string(),
             content_length,
