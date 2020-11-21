@@ -14,7 +14,7 @@ derive_more = "0.99"
 dotenv = "0.15"
 actix-web = "3.2"
 actix-http = "2.1"
-bytes = "0.5"
+bytes = "0.6"
 
 [dependencies.tokio]
 version = "0.2"
