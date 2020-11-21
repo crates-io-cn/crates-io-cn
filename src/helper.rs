@@ -1,6 +1,6 @@
-use std::env;
 use bytes::{Bytes, BytesMut};
 use serde::Deserialize;
+use std::env;
 use std::sync::Arc;
 use tokio::stream::StreamExt;
 use tokio::sync::{mpsc, watch, RwLock};
@@ -19,9 +19,12 @@ pub struct CrateReq {
 
 lazy_static! {
     static ref CLIENT: reqwest::Client = reqwest::Client::new();
-    static ref UPYUN_NAME: &'static str = Box::leak(env::var("UPYUN_NAME").unwrap().into_boxed_str());
-    static ref UPYUN_TOKEN: &'static str = Box::leak(env::var("UPYUN_TOKEN").unwrap().into_boxed_str());
-    static ref UPYUN_BUCKET: &'static str = Box::leak(env::var("UPYUN_BUCKET").unwrap().into_boxed_str());
+    static ref UPYUN_NAME: &'static str =
+        Box::leak(env::var("UPYUN_NAME").unwrap().into_boxed_str());
+    static ref UPYUN_TOKEN: &'static str =
+        Box::leak(env::var("UPYUN_TOKEN").unwrap().into_boxed_str());
+    static ref UPYUN_BUCKET: &'static str =
+        Box::leak(env::var("UPYUN_BUCKET").unwrap().into_boxed_str());
     static ref UPYUN: Upyun = Upyun::new(Operator::new(&UPYUN_NAME, &UPYUN_TOKEN));
 }
 
@@ -52,7 +55,7 @@ impl Crate {
         let krate_req_key = krate_req.clone();
         let resp = CLIENT.get(&uri).send().await?;
         if resp.status() != StatusCode::OK {
-            return Err(Error::FetchFail)
+            return Err(Error::FetchFail);
         }
         let content_length = resp.content_length().ok_or(Error::MissingField)? as usize;
         let (tx, rx) = watch::channel(0);

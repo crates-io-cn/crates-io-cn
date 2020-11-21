@@ -5,25 +5,35 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Error, From)]
 pub struct UpyunError {
-    code: u64
+    code: u64,
 }
 
 #[derive(Debug, Display, Error, From)]
 pub enum Error {
     Reqwest(reqwest::Error),
     SerdeJSON(serde_json::Error),
-    Upyun(UpyunError)
+    Upyun(UpyunError),
 }
 
 impl std::fmt::Debug for UpyunError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        write!(f, "UpyunError {{ code: {}, msg: {} }}", self.code, UPYUN_CODE.get(&self.code).unwrap_or(&"unknown"))
+        write!(
+            f,
+            "UpyunError {{ code: {}, msg: {} }}",
+            self.code,
+            UPYUN_CODE.get(&self.code).unwrap_or(&"unknown")
+        )
     }
 }
 
 impl std::fmt::Display for UpyunError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        write!(f, "UpyunError<{}>: {}", self.code, UPYUN_CODE.get(&self.code).unwrap_or(&"unknown"))
+        write!(
+            f,
+            "UpyunError<{}>: {}",
+            self.code,
+            UPYUN_CODE.get(&self.code).unwrap_or(&"unknown")
+        )
     }
 }
 

@@ -35,7 +35,7 @@ async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
         Err(e) => {
             error!("{}", e);
             HttpResponse::NotFound().finish()
-        },
+        }
         Ok(krate) => {
             let (tx, rx) = unbounded_channel::<Result<bytes::Bytes, ()>>();
             krate.tee(tx);
@@ -44,7 +44,6 @@ async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
                 .streaming(rx)
         }
     }
-
 }
 
 #[actix_web::main]

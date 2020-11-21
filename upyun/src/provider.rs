@@ -11,7 +11,7 @@ pub enum Provider {
 }
 
 impl From<Provider> for &'static str {
-    fn from(provider: Provider) -> &'static str{
+    fn from(provider: Provider) -> &'static str {
         match provider {
             Provider::Auto => AUTO,
             Provider::ChinaNet => CHINA_NET,
