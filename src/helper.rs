@@ -9,7 +9,6 @@ use crate::error::Error;
 use crate::ACTIVE_DOWNLOADS;
 use reqwest::StatusCode;
 use upyun::{Operator, Upyun};
-use std::ops::Deref;
 
 #[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
 pub struct CrateReq {
