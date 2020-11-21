@@ -17,7 +17,7 @@ actix-http = "2.1"
 bytes = "0.5"
 
 [dependencies.tokio]
-version = "0.2"
+version = "0.3"
 features = ["sync"]
 
 [dependencies.reqwest]
