@@ -2,3 +2,7 @@
 
 ## Private configuration
 .env
+
+## IDE or Editor
+/.idea/
+/.vscode/
