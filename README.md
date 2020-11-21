@@ -6,4 +6,5 @@
 
 - [x] 缓存反代
 - [x] 预热
-- [ ] 上传新 crate 到又拍云 
+- [x] 上传新 crate 到又拍云
+- [ ] 接管 crates.io-index 更新
