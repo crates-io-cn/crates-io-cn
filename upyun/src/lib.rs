@@ -7,13 +7,13 @@ use base64::encode as b64enc;
 use chrono::{DateTime, Utc};
 
 use bytes::Bytes;
-use reqwest::{header, Method, StatusCode};
+use reqwest::{header, Method, RequestBuilder, StatusCode};
 use serde_json::Value;
 
 pub mod error;
 mod provider;
+use error::{Error, Result, UpyunError};
 pub use provider::Provider;
-use error::{Result, Error, UpyunError};
 
 lazy_static! {
     static ref CLIENT: reqwest::Client = reqwest::Client::new();
@@ -29,7 +29,7 @@ pub struct Upyun {
 pub struct Operator {
     name: &'static str,
     passwd: &'static str,
-    authorization: String
+    authorization: String,
 }
 
 impl Operator {
@@ -38,10 +38,31 @@ impl Operator {
         Self {
             name,
             passwd,
-            authorization
+            authorization,
         }
     }
 
+    pub fn request<P>(
+        &self,
+        method: Method,
+        provider: Provider,
+        path: P,
+        date: Option<DateTime<Utc>>,
+    ) -> RequestBuilder
+    where
+        P: AsRef<str>,
+    {
+        let url = format!("{}{}", provider.as_ref(), path.as_ref());
+        debug!("{}", url);
+        let req = CLIENT
+            .request(method, &url)
+            .header(header::AUTHORIZATION, &self.authorization);
+        if let Some(date) = date {
+            req.header(header::DATE, format_gmt(date))
+        } else {
+            req.header(header::DATE, format_gmt(Utc::now()))
+        }
+    }
 }
 
 impl Upyun {
@@ -57,18 +78,14 @@ impl Upyun {
     }
 
     pub async fn put_file<B, K>(&self, bucket: B, key: K, content: Bytes) -> Result<()>
-        where
-            B: AsRef<str>,
-            K: AsRef<str>
+    where
+        B: AsRef<str>,
+        K: AsRef<str>,
     {
         let path = format!("/{}/{}", bucket.as_ref(), key.as_ref());
-        let uri = format!("{}{}", self.provider.as_ref(), path);
-        let date = Utc::now();
-        debug!("{} {}", date, uri);
-        let resp = CLIENT
-            .request(Method::PUT, &uri)
-            .header(header::AUTHORIZATION, &self.operator.authorization)
-            .header(header::DATE, format_gmt(date))
+        let resp = self
+            .operator
+            .request(Method::PUT, self.provider, path, None)
             .body(content)
             .send()
             .await?;
@@ -76,7 +93,9 @@ impl Upyun {
             StatusCode::OK => Ok(()),
             _ => {
                 let err: Value = resp.json().await.unwrap();
-                Err(Error::Upyun(UpyunError::from(err["code"].as_u64().unwrap_or(0))))
+                Err(Error::Upyun(UpyunError::from(
+                    err["code"].as_u64().unwrap_or(0),
+                )))
             }
         }
     }
