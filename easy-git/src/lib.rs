@@ -2,7 +2,7 @@
 extern crate log;
 
 use std::path::Path;
-use git2::{Repository, Tree, ResetType, Oid};
+use git2::{Repository, Tree, ResetType, Oid, RebaseOptions, MergeOptions, FileFavor};
 
 mod error;
 pub use error::Error;
@@ -57,7 +57,11 @@ impl EasyGit for Repository {
         let remote = self.find_reference("refs/remotes/origin/master")?;
         let remote_commit = self.reference_to_annotated_commit(&remote)?;
         trace!("{:?} at: {:?}", remote_commit.refname(), remote_commit.id());
-        let mut rebase = self.rebase(Some(&local_commit), Some(&remote_commit), None, None)?;
+        let mut rebase_options = RebaseOptions::new();
+        let mut merge_options = MergeOptions::new();
+        merge_options.file_favor(FileFavor::Theirs);
+        rebase_options.merge_options(merge_options);
+        let mut rebase = self.rebase(Some(&local_commit), Some(&remote_commit), None, Some(&mut rebase_options))?;
         while let Some(r) = rebase.next() {
             let ro = r?;
             trace!("RebaseOperation: {:?} {:?}", ro.kind(), ro.id());
