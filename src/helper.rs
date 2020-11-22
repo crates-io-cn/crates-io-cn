@@ -12,8 +12,9 @@ use upyun::{Operator, Upyun};
 
 #[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
 pub struct CrateReq {
-    #[serde(rename = "crate")]
+    #[serde(alias = "crate")]
     name: String,
+    #[serde(alias = "vers")]
     version: String,
 }
 
