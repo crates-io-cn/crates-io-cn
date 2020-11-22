@@ -11,6 +11,8 @@ use tokio::sync::{mpsc::unbounded_channel, RwLock};
 
 mod error;
 mod helper;
+#[allow(dead_code)]
+mod index;
 use helper::{Crate, CrateReq};
 
 lazy_static! {
