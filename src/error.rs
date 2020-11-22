@@ -10,5 +10,4 @@ pub enum Error {
     EasyGit(easy_git::Error),
     MissingField,
     FetchFail,
-    InvalidUTF8,
 }
