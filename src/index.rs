@@ -48,17 +48,7 @@ impl GitIndex {
         let local_config: Config = serde_json::from_reader(config_file)?;
         if local_config != *config {
             repo.reset_origin_hard()?;
-            {
-                debug!("{:?}", path.as_ref().join("config.json"));
-                let mut config_file =
-                    OpenOptions::new()
-                        .truncate(true)
-                        .write(true)
-                        .create(true)
-                        .open(path.as_ref().join("config.json"))?;
-                config_file.write_all(serde_json::to_string_pretty(config)?.as_bytes())?;
-                config_file.write_all(&[b'\n'])?;
-            }
+            Self::write_config(path, config)?;
             repo.commit_message("Add mirror", &repo.add("config.json")?)?;
         }
         Ok(GitIndex { repo: Arc::new(repo) })
@@ -69,6 +59,19 @@ impl GitIndex {
         let crates = self.diff("HEAD~1", "origin/HEAD")?;
         self.repo.rebase_master()?;
         Ok(crates)
+    }
+
+    fn write_config<P: AsRef<Path>>(path: P, config: &Config) -> Result<(), Error> {
+        debug!("{:?}", path.as_ref().join("config.json"));
+        let mut config_file =
+            OpenOptions::new()
+                .truncate(true)
+                .write(true)
+                .create(true)
+                .open(path.as_ref().join("config.json"))?;
+        config_file.write_all(serde_json::to_string_pretty(config)?.as_bytes())?;
+        config_file.write_all(&[b'\n'])?;
+        Ok(())
     }
 
     fn diff<A, B>(&self, a: A, b: B) -> Result<Vec<CrateReq>, Error>
