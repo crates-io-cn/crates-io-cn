@@ -17,6 +17,8 @@ pub struct GitIndex {
     repo: Arc<Repository>,
 }
 
+unsafe impl Send for GitIndex {}
+
 /// crates-io config.json
 ///
 /// Default Config
@@ -120,7 +122,7 @@ fn test() {
     // debug!("{:?}", gi.head_author());
     // let diff = gi.update().unwrap();
     // debug!("{:?}", diff);
-    let crates = gi.diff("HEAD~1", "origin/HEAD").unwrap();
+    let crates = gi.update().unwrap();
     for krate in crates {
         debug!("{:?}", krate);
     }

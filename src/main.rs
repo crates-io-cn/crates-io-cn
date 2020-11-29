@@ -14,6 +14,8 @@ mod helper;
 #[allow(dead_code)]
 mod index;
 use helper::{Crate, CrateReq};
+use crate::index::{GitIndex, Config};
+use tokio::time::Duration;
 
 lazy_static! {
     static ref ACTIVE_DOWNLOADS: Arc<RwLock<HashMap<CrateReq, Arc<Crate>>>> =
@@ -52,6 +54,23 @@ async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
 async fn main() -> std::io::Result<()> {
     log4rs::init_file("config/log4rs.yml", Default::default()).unwrap();
     dotenv::dotenv().ok();
+    tokio::spawn(async move {
+        let gi = GitIndex::new("/var/www/git/crates.io-index", &Config {
+            dl: "https://static.crates-io.cn/{crate}/{version}".to_string(),
+            .. Default::default()
+        }).unwrap();
+        loop {
+            let crates = gi.update().unwrap();
+            for krate in crates {
+                debug!("Sync {:?}", krate);
+                match Crate::create(krate).await {
+                    Ok(_) => (),
+                    Err(e) => error!("{}", e)
+                };
+            }
+            tokio::time::delay_for(Duration::from_secs(300)).await;
+        }
+    });
     HttpServer::new(|| App::new().wrap(Logger::default()).service(sync))
         .bind("127.0.0.1:8080")?
         .run()
