@@ -83,6 +83,7 @@ impl Crate {
                 match chunk {
                     Ok(data) => {
                         let mut buffer = write_buffer.write().await;
+                        trace!("recv {}", data.len());
                         buffer.extend_from_slice(&data[..]);
                         tx.broadcast(data.len()).unwrap();
                     }
@@ -93,13 +94,16 @@ impl Crate {
                 };
             }
             let buffer = write_buffer.read().await.clone().freeze();
+            debug!("{:?} download complete", krate_req_key);
             if let Err(e) = UPYUN.put_file(*UPYUN_BUCKET, &key, buffer).await {
                 error!("{}", e);
             } else {
                 ACTIVE_DOWNLOADS.write().await.remove(&krate_req_key);
+                debug!("remove {:?} from active download", krate_req_key);
             }
         });
         guard.insert(krate_req.clone(), Arc::new(krate));
+        debug!("insert {:?} into active download", krate_req);
         Ok(guard.get(&krate_req).unwrap().clone())
     }
 

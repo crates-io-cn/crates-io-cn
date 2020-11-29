@@ -15,7 +15,8 @@ mod helper;
 mod index;
 use helper::{Crate, CrateReq};
 use crate::index::{GitIndex, Config};
-use tokio::time::Duration;
+use tokio::time::{Duration, Instant};
+use std::ops::Add;
 
 lazy_static! {
     static ref ACTIVE_DOWNLOADS: Arc<RwLock<HashMap<CrateReq, Arc<Crate>>>> =
@@ -60,15 +61,17 @@ async fn main() -> std::io::Result<()> {
             .. Default::default()
         }).unwrap();
         loop {
+            let ddl = Instant::now().add(Duration::from_secs(300));
+            info!("next update will on {:?}, exec git update now", ddl);
             let crates = gi.update().unwrap();
             for krate in crates {
-                debug!("Sync {:?}", krate);
+                debug!("start to sync {:?}", krate);
                 match Crate::create(krate).await {
                     Ok(_) => (),
                     Err(e) => error!("{}", e)
                 };
             }
-            tokio::time::delay_for(Duration::from_secs(300)).await;
+            tokio::time::delay_until(ddl).await;
         }
     });
     HttpServer::new(|| App::new().wrap(Logger::default()).service(sync))
