@@ -10,3 +10,7 @@
 - [x] 接管 crates.io-index 更新
 - [ ] 通过 Web API 提供同步状态
 - [ ] 说得过去的前端页面
+
+
+### Yet Another Sponsor Approach
+- ETH: 0x7Fa0Ee0d50291ae76902080Bc91Ebac85C582425
