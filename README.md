@@ -12,5 +12,9 @@
 - [ ] 说得过去的前端页面
 
 
-### Yet Another Sponsor Approach
+### Funding
+
+镜像的运转需要资金，如果可以的话，通过右侧 Sponsor 列表中的方式捐赠。
+
+#### Yet Another Sponsor Approach
 - ETH: 0x7Fa0Ee0d50291ae76902080Bc91Ebac85C582425
