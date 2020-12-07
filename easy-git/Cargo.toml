@@ -1,0 +1,10 @@
+[package]
+name = "easy-git"
+version = "0.1.0"
+authors = ["lightsing <light.tsing@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+derive_more = "0.99"
+git2 = "0.13"

@@ -11,7 +11,12 @@ use tokio::sync::{mpsc::unbounded_channel, RwLock};
 
 mod error;
 mod helper;
+#[allow(dead_code)]
+mod index;
 use helper::{Crate, CrateReq};
+use crate::index::{GitIndex, Config};
+use tokio::time::{Duration, Instant};
+use std::ops::Add;
 
 lazy_static! {
     static ref ACTIVE_DOWNLOADS: Arc<RwLock<HashMap<CrateReq, Arc<Crate>>>> =
@@ -50,6 +55,25 @@ async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
 async fn main() -> std::io::Result<()> {
     log4rs::init_file("config/log4rs.yml", Default::default()).unwrap();
     dotenv::dotenv().ok();
+    tokio::spawn(async move {
+        let gi = GitIndex::new("/var/www/git/crates.io-index", &Config {
+            dl: "https://static.crates-io.cn/{crate}/{version}".to_string(),
+            .. Default::default()
+        }).unwrap();
+        loop {
+            let ddl = Instant::now().add(Duration::from_secs(300));
+            info!("next update will on {:?}, exec git update now", ddl);
+            let crates = gi.update().unwrap();
+            for krate in crates {
+                debug!("start to sync {:?}", krate);
+                match Crate::create(krate).await {
+                    Ok(_) => (),
+                    Err(e) => error!("{}", e)
+                };
+            }
+            tokio::time::delay_until(ddl).await;
+        }
+    });
     HttpServer::new(|| App::new().wrap(Logger::default()).service(sync))
         .bind("127.0.0.1:8080")?
         .run()
