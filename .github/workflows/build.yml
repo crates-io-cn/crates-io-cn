@@ -33,6 +33,9 @@ jobs:
           toolchain: stable
           override: true
       - run: echo $ENV_FILE > .env
+      - run: |
+          git config --global user.name "bors"
+          git config --global user.email "bors@crates-io.cn"
       - uses: actions-rs/cargo@v1
         with:
           command: test
