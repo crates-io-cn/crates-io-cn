@@ -56,6 +56,7 @@ impl Operator {
         debug!("{}", url);
         let req = CLIENT
             .request(method, &url)
+            .header(header::USER_AGENT, "upyun-client (crates-io.cn)")
             .header(header::AUTHORIZATION, &self.authorization);
         if let Some(date) = date {
             req.header(header::DATE, format_gmt(date))
