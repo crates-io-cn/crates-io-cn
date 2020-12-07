@@ -63,7 +63,13 @@ async fn main() -> std::io::Result<()> {
         loop {
             let ddl = Instant::now().add(Duration::from_secs(300));
             info!("next update will on {:?}, exec git update now", ddl);
-            let crates = gi.update().unwrap();
+            let crates = match gi.update() {
+                Ok(crates) => crates,
+                Err(e) => {
+                    error!("git update error: {}", e);
+                    continue
+                }
+            };
             for krate in crates {
                 debug!("start to sync {:?}", krate);
                 match Crate::create(krate).await {
