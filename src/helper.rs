@@ -95,11 +95,16 @@ impl Crate {
             }
             let buffer = write_buffer.read().await.clone().freeze();
             debug!("{:?} download complete", krate_req_key);
-            if let Err(e) = UPYUN.put_file(*UPYUN_BUCKET, &key, buffer).await {
-                error!("{}", e);
-            } else {
+            let mut counter = 10;
+            while counter > 0 {
+                if let Err(e) = UPYUN.put_file(*UPYUN_BUCKET, &key, buffer.clone()).await {
+                    error!("retry attempt {}:{}", 10 - counter, e);
+                    counter -= 1;
+                    continue;
+                }
                 ACTIVE_DOWNLOADS.write().await.remove(&krate_req_key);
                 debug!("remove {:?} from active download", krate_req_key);
+                break;
             }
         });
         guard.insert(krate_req.clone(), Arc::new(krate));
