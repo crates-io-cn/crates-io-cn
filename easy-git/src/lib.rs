@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate log;
 
+use git2::{FileFavor, MergeOptions, Oid, RebaseOptions, Repository, ResetType, Tree};
 use std::path::Path;
-use git2::{Repository, Tree, ResetType, Oid, RebaseOptions, MergeOptions, FileFavor};
 
 mod error;
 pub use error::Error;
@@ -38,7 +38,14 @@ impl EasyGit for Repository {
         let head_oid = head.target().ok_or(Error::SymbolicReference)?;
         let parent = self.find_commit(head_oid)?;
         let sig = self.signature()?;
-        let oid = self.commit(Some("HEAD"), &sig, &sig, message.as_ref(), &tree, &[&parent])?;
+        let oid = self.commit(
+            Some("HEAD"),
+            &sig,
+            &sig,
+            message.as_ref(),
+            &tree,
+            &[&parent],
+        )?;
         Ok(oid)
     }
 
@@ -61,7 +68,12 @@ impl EasyGit for Repository {
         let mut merge_options = MergeOptions::new();
         merge_options.file_favor(FileFavor::Theirs);
         rebase_options.merge_options(merge_options);
-        let mut rebase = self.rebase(Some(&local_commit), Some(&remote_commit), None, Some(&mut rebase_options))?;
+        let mut rebase = self.rebase(
+            Some(&local_commit),
+            Some(&remote_commit),
+            None,
+            Some(&mut rebase_options),
+        )?;
         while let Some(r) = rebase.next() {
             let ro = r?;
             trace!("RebaseOperation: {:?} {:?}", ro.kind(), ro.id());

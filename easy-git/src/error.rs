@@ -4,5 +4,5 @@ use derive_more::{Display, Error, From};
 pub enum Error {
     Git2(git2::Error),
     BareRepo,
-    SymbolicReference
+    SymbolicReference,
 }
