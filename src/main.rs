@@ -55,6 +55,19 @@ async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
 async fn main() -> std::io::Result<()> {
     log4rs::init_file("config/log4rs.yml", Default::default()).unwrap();
     dotenv::dotenv().ok();
+    let (tx, rx) = async_channel::unbounded();
+    for i in 0..10 {
+        let worker_rx = rx.clone();
+        tokio::spawn(async move {
+            while let Ok(krate) = worker_rx.recv().await {
+                debug!("[worker#{}]start to sync {:?}", i, krate);
+                match Crate::create(krate).await {
+                    Ok(_) => (),
+                    Err(e) => error!("{}", e),
+                };
+            };
+        });
+    }
     tokio::spawn(async move {
         let gi = GitIndex::new(
             "/var/www/git/crates.io-index",
@@ -74,17 +87,11 @@ async fn main() -> std::io::Result<()> {
                     continue;
                 }
             };
-            tokio::spawn(async move {
-                for krate in crates {
-                    tokio::spawn(async move {
-                        debug!("start to sync {:?}", krate);
-                        match Crate::create(krate).await {
-                            Ok(_) => (),
-                            Err(e) => error!("{}", e),
-                        };
-                    });
+            for krate in crates {
+                if let Err(e) = tx.send(krate).await {
+                    error!("{}", e);
                 }
-            });
+            }
             tokio::time::delay_until(ddl).await;
         }
     });
