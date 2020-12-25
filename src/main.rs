@@ -13,10 +13,10 @@ mod error;
 mod helper;
 #[allow(dead_code)]
 mod index;
+use crate::index::{Config, GitIndex};
 use helper::{Crate, CrateReq};
-use crate::index::{GitIndex, Config};
-use tokio::time::{Duration, Instant};
 use std::ops::Add;
+use tokio::time::{Duration, Instant};
 
 lazy_static! {
     static ref ACTIVE_DOWNLOADS: Arc<RwLock<HashMap<CrateReq, Arc<Crate>>>> =
@@ -56,10 +56,14 @@ async fn main() -> std::io::Result<()> {
     log4rs::init_file("config/log4rs.yml", Default::default()).unwrap();
     dotenv::dotenv().ok();
     tokio::spawn(async move {
-        let gi = GitIndex::new("/var/www/git/crates.io-index", &Config {
-            dl: "https://static.crates-io.cn/{crate}/{version}".to_string(),
-            .. Default::default()
-        }).unwrap();
+        let gi = GitIndex::new(
+            "/var/www/git/crates.io-index",
+            &Config {
+                dl: "https://static.crates-io.cn/{crate}/{version}".to_string(),
+                ..Default::default()
+            },
+        )
+        .unwrap();
         loop {
             let ddl = Instant::now().add(Duration::from_secs(300));
             info!("next update will on {:?}, exec git update now", ddl);
@@ -67,16 +71,20 @@ async fn main() -> std::io::Result<()> {
                 Ok(crates) => crates,
                 Err(e) => {
                     error!("git update error: {}", e);
-                    continue
+                    continue;
                 }
             };
-            for krate in crates {
-                debug!("start to sync {:?}", krate);
-                match Crate::create(krate).await {
-                    Ok(_) => (),
-                    Err(e) => error!("{}", e)
-                };
-            }
+            tokio::spawn(async move {
+                for krate in crates {
+                    tokio::spawn(async move {
+                        debug!("start to sync {:?}", krate);
+                        match Crate::create(krate).await {
+                            Ok(_) => (),
+                            Err(e) => error!("{}", e),
+                        };
+                    });
+                }
+            });
             tokio::time::delay_until(ddl).await;
         }
     });
