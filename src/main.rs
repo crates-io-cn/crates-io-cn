@@ -89,6 +89,7 @@ async fn main() -> std::io::Result<()> {
                 Ok(crates) => crates,
                 Err(e) => {
                     error!("git update error: {}", e);
+                    tokio::time::delay_for(Duration::from_secs(10));
                     continue;
                 }
             };
