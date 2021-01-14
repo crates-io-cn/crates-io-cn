@@ -10,10 +10,11 @@ systemd = ["sd-notify"]
 
 [dependencies]
 log = "0.4"
-log4rs = "0.13"
+log4rs = "1.0"
 futures = "0.3"
 lazy_static = "1.4"
 async-trait = "0.1"
+async-channel = "1.5"
 derive_more = "0.99"
 dotenv = "0.15"
 actix-web = "3"

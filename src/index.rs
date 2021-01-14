@@ -1,14 +1,14 @@
-use std::fs::{OpenOptions, File};
+use std::fs::{File, OpenOptions};
 use std::path::Path;
-use std::sync::{RwLock, Arc};
+use std::sync::{Arc, RwLock};
 
-use git2::{Repository, DiffOptions, DiffDelta, DiffHunk, DiffLine};
-use serde::{Serialize, Deserialize};
+use git2::{DiffDelta, DiffHunk, DiffLine, DiffOptions, Repository};
+use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 use crate::helper::CrateReq;
-use std::io::Write;
 use easy_git::EasyGit;
+use std::io::Write;
 
 const UPSTREAM: &str = "https://github.com/rust-lang/crates.io-index.git";
 
@@ -52,18 +52,19 @@ impl GitIndex {
             repo.reset_origin_hard()?;
             {
                 debug!("{:?}", path.as_ref().join("config.json"));
-                let mut config_file =
-                    OpenOptions::new()
-                        .truncate(true)
-                        .write(true)
-                        .create(true)
-                        .open(path.as_ref().join("config.json"))?;
+                let mut config_file = OpenOptions::new()
+                    .truncate(true)
+                    .write(true)
+                    .create(true)
+                    .open(path.as_ref().join("config.json"))?;
                 config_file.write_all(serde_json::to_string_pretty(config)?.as_bytes())?;
                 config_file.write_all(&[b'\n'])?;
             }
             repo.commit_message("Add mirror", &repo.add("config.json")?)?;
         }
-        Ok(GitIndex { repo: Arc::new(repo) })
+        Ok(GitIndex {
+            repo: Arc::new(repo),
+        })
     }
 
     pub fn update(&self) -> Result<Vec<CrateReq>, Error> {
@@ -74,7 +75,9 @@ impl GitIndex {
     }
 
     fn diff<A, B>(&self, a: A, b: B) -> Result<Vec<CrateReq>, Error>
-        where A: AsRef<str>, B: AsRef<str>
+    where
+        A: AsRef<str>,
+        B: AsRef<str>,
     {
         let head = self.repo.revparse_single(a.as_ref())?;
         let origin = self.repo.revparse_single(b.as_ref())?;
@@ -115,10 +118,14 @@ impl GitIndex {
 #[test]
 fn test() {
     log4rs::init_file("config/log4rs.yml", Default::default()).unwrap();
-    let gi = GitIndex::new("index", &Config {
-        dl: "https://crates-static.project5e.com/{crate}/{version}".to_string(),
-        .. Default::default()
-    }).unwrap();
+    let gi = GitIndex::new(
+        "index",
+        &Config {
+            dl: "https://crates-static.project5e.com/{crate}/{version}".to_string(),
+            ..Default::default()
+        },
+    )
+    .unwrap();
     // debug!("{:?}", gi.head_author());
     // let diff = gi.update().unwrap();
     // debug!("{:?}", diff);

@@ -16,10 +16,10 @@ mod index;
 #[cfg(all(feature = "systemd", target_os = "linux"))]
 mod systemd;
 
+use crate::index::{Config, GitIndex};
 use helper::{Crate, CrateReq};
-use crate::index::{GitIndex, Config};
-use tokio::time::{Duration, Instant};
 use std::ops::Add;
+use tokio::time::{Duration, Instant};
 
 lazy_static! {
     static ref ACTIVE_DOWNLOADS: Arc<RwLock<HashMap<CrateReq, Arc<Crate>>>> =
@@ -58,11 +58,28 @@ async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
 async fn main() -> std::io::Result<()> {
     log4rs::init_file("config/log4rs.yml", Default::default()).unwrap();
     dotenv::dotenv().ok();
+    let (tx, rx) = async_channel::unbounded();
+    for i in 0..10 {
+        let worker_rx = rx.clone();
+        tokio::spawn(async move {
+            while let Ok(krate) = worker_rx.recv().await {
+                debug!("[worker#{}]start to sync {:?}", i, krate);
+                match Crate::create(krate).await {
+                    Ok(_) => (),
+                    Err(e) => error!("{}", e),
+                };
+            };
+        });
+    }
     tokio::spawn(async move {
-        let gi = GitIndex::new("/var/www/git/crates.io-index", &Config {
-            dl: "https://static.crates-io.cn/{crate}/{version}".to_string(),
-            .. Default::default()
-        }).unwrap();
+        let gi = GitIndex::new(
+            "/var/www/git/crates.io-index",
+            &Config {
+                dl: "https://static.crates-io.cn/{crate}/{version}".to_string(),
+                ..Default::default()
+            },
+        )
+        .unwrap();
         loop {
             let ddl = Instant::now().add(Duration::from_secs(300));
             info!("next update will on {:?}, exec git update now", ddl);
@@ -72,15 +89,13 @@ async fn main() -> std::io::Result<()> {
                 Ok(crates) => crates,
                 Err(e) => {
                     error!("git update error: {}", e);
-                    continue
+                    continue;
                 }
             };
             for krate in crates {
-                debug!("start to sync {:?}", krate);
-                match Crate::create(krate).await {
-                    Ok(_) => (),
-                    Err(e) => error!("{}", e)
-                };
+                if let Err(e) = tx.send(krate).await {
+                    error!("{}", e);
+                }
             }
             tokio::time::delay_until(ddl).await;
         }
