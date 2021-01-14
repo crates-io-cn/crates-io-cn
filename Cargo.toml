@@ -6,7 +6,7 @@ edition = "2018"
 license = "MIT OR Apache-2.0"
 
 [features]
-systemd = ["sd-notify"]
+systemd-integration = ["systemd"]
 
 [dependencies]
 log = "0.4"
@@ -22,7 +22,7 @@ actix-http = "2"
 bytes = "0.5"
 git2 = "0.13"
 serde_json = "1.0"
-sd-notify = { version = "0.1", optional = true }
+systemd = { version = "0.8", optional = true }
 
 [dependencies.tokio]
 version = "0.2"

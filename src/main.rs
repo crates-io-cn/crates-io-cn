@@ -13,7 +13,7 @@ mod error;
 mod helper;
 #[allow(dead_code)]
 mod index;
-#[cfg(all(feature = "systemd", target_os = "linux"))]
+#[cfg(all(feature = "systemd-integration", target_os = "linux"))]
 mod systemd;
 
 use crate::index::{Config, GitIndex};
