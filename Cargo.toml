@@ -5,6 +5,9 @@ authors = ["lightsing <light.tsing@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 
+[features]
+systemd = ["sd-notify"]
+
 [dependencies]
 log = "0.4"
 log4rs = "0.13"
@@ -13,11 +16,12 @@ lazy_static = "1.4"
 async-trait = "0.1"
 derive_more = "0.99"
 dotenv = "0.15"
-actix-web = "3.2"
-actix-http = "2.1"
+actix-web = "3"
+actix-http = "2"
 bytes = "0.5"
 git2 = "0.13"
 serde_json = "1.0"
+sd-notify = { version = "0.1", optional = true }
 
 [dependencies.tokio]
 version = "0.2"

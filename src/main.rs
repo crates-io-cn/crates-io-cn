@@ -13,6 +13,9 @@ mod error;
 mod helper;
 #[allow(dead_code)]
 mod index;
+#[cfg(all(feature = "systemd", target_os = "linux"))]
+mod systemd;
+
 use helper::{Crate, CrateReq};
 use crate::index::{GitIndex, Config};
 use tokio::time::{Duration, Instant};
@@ -63,6 +66,8 @@ async fn main() -> std::io::Result<()> {
         loop {
             let ddl = Instant::now().add(Duration::from_secs(300));
             info!("next update will on {:?}, exec git update now", ddl);
+            #[cfg(all(feature = "systemd", target_os = "linux"))]
+            systemd::notify_watchdog();
             let crates = match gi.update() {
                 Ok(crates) => crates,
                 Err(e) => {
@@ -80,8 +85,10 @@ async fn main() -> std::io::Result<()> {
             tokio::time::delay_until(ddl).await;
         }
     });
-    HttpServer::new(|| App::new().wrap(Logger::default()).service(sync))
+    let server = HttpServer::new(|| App::new().wrap(Logger::default()).service(sync))
         .bind("127.0.0.1:8080")?
-        .run()
-        .await
+        .run();
+    #[cfg(all(feature = "systemd", target_os = "linux"))]
+    systemd::notify_ready();
+    server.await
 }
