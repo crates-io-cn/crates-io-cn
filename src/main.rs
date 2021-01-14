@@ -85,7 +85,8 @@ async fn main() -> std::io::Result<()> {
             info!("next update will on {:?}, exec git update now", ddl);
             #[cfg(all(feature = "systemd", target_os = "linux"))]
             systemd::notify_watchdog();
-            let crates = match gi.update() {
+            let updated = gi.update();
+            let crates = match updated {
                 Ok(crates) => crates,
                 Err(e) => {
                     error!("git update error: {}", e);
