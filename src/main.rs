@@ -37,7 +37,8 @@ lazy_static! {
 /// Upyun will redirect 404 (non-exist) crate to given address configured
 /// replace `$_URI` with the path part `/{crate}/{version}`
 #[get("/sync/{crate}/{version}")]
-async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
+async fn sync(krate_req: web::Path<CrateReq>) -> HttpResponse {
+    let krate_req = krate_req.into_inner();
     format!("{:?}", krate_req);
     match Crate::create(krate_req).await {
         Err(e) => {
@@ -46,6 +47,7 @@ async fn sync(web::Path(krate_req): web::Path<CrateReq>) -> HttpResponse {
         }
         Ok(krate) => {
             let (tx, rx) = unbounded_channel::<Result<bytes::Bytes, ()>>();
+            let rx = tokio_stream::wrappers::UnboundedReceiverStream::new(rx);
             krate.tee(tx);
             HttpResponse::Ok()
                 .content_type("application/x-tar")
@@ -90,7 +92,7 @@ async fn main() -> std::io::Result<()> {
                 Ok(crates) => crates,
                 Err(e) => {
                     error!("git update error: {}", e);
-                    tokio::time::delay_for(Duration::from_secs(10)).await;
+                    tokio::time::sleep(Duration::from_secs(10)).await;
                     continue;
                 }
             };
@@ -99,7 +101,7 @@ async fn main() -> std::io::Result<()> {
                     error!("{}", e);
                 }
             }
-            tokio::time::delay_until(ddl).await;
+            tokio::time::sleep_until(ddl).await;
         }
     });
     let server = HttpServer::new(|| App::new().wrap(Logger::default()).service(sync))

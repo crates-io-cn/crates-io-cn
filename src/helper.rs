@@ -2,7 +2,7 @@ use bytes::{Bytes, BytesMut};
 use serde::Deserialize;
 use std::env;
 use std::sync::Arc;
-use tokio::stream::StreamExt;
+use tokio_stream::StreamExt;
 use tokio::sync::{mpsc, watch, RwLock};
 
 use crate::error::Error;
@@ -85,7 +85,7 @@ impl Crate {
                         let mut buffer = write_buffer.write().await;
                         trace!("recv {}", data.len());
                         buffer.extend_from_slice(&data[..]);
-                        tx.broadcast(data.len()).unwrap();
+                        tx.send(data.len()).unwrap();
                     }
                     Err(e) => {
                         error!("{}", e);
@@ -132,7 +132,7 @@ impl Crate {
                     }
                 }
                 info!("{}/{}", ptr, krate.content_length);
-                if ptr == krate.content_length || notify.recv().await.is_none() {
+                if ptr == krate.content_length || notify.changed().await.is_ok() {
                     break;
                 }
             }
