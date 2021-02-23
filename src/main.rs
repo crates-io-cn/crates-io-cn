@@ -70,7 +70,7 @@ async fn main() -> std::io::Result<()> {
                     Ok(_) => (),
                     Err(e) => error!("{}", e),
                 };
-            };
+            }
         });
     }
     tokio::spawn(async move {

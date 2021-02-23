@@ -2,8 +2,8 @@ use bytes::{Bytes, BytesMut};
 use serde::Deserialize;
 use std::env;
 use std::sync::Arc;
-use tokio_stream::StreamExt;
 use tokio::sync::{mpsc, watch, RwLock};
+use tokio_stream::StreamExt;
 
 use crate::error::Error;
 use crate::ACTIVE_DOWNLOADS;
