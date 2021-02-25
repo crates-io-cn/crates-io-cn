@@ -1,5 +1,7 @@
 use derive_more::{Display, Error, From};
 
+pub type Result<T> = std::result::Result<T, Error>;
+
 #[derive(Debug, Display, From, Error)]
 pub enum Error {
     IO(std::io::Error),
