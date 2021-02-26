@@ -84,7 +84,7 @@ async fn main() -> std::io::Result<()> {
         let gi = GitIndex::new(
             GIT_INDEX_DIR.deref(),
             &Config {
-                dl: "https://static.crates-io.cn/{crate}/{version}".to_string(),
+                dl: DL_FORMAT.to_string(),
                 ..Default::default()
             },
         )
