@@ -156,7 +156,12 @@ impl Crate {
                     }
                 }
                 info!("{}/{}", ptr, krate.content_length);
-                if ptr == krate.content_length || notify.changed().await.is_err() {
+                if ptr == krate.content_length {
+                    break;
+                }
+                if let Err(e) = notify.changed().await {
+                    debug!("{}", e);
+                    tx.closed().await;
                     break;
                 }
             }
