@@ -15,7 +15,7 @@ use std::io::Write;
 lazy_static! {
     static ref UPSTREAM: &'static str =
         Box::leak(
-            env::var("GIT_INDEX_DIR")
+            env::var("UPSTREAM")
                 .unwrap_or_else(|_| "https://github.com/rust-lang/crates.io-index.git".to_string())
                 .into_boxed_str()
         );
