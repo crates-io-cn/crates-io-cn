@@ -5,6 +5,7 @@ extern crate lazy_static;
 
 use actix_web::middleware::Logger;
 use actix_web::{get, web, App, HttpResponse, HttpServer};
+use std::env;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{mpsc::unbounded_channel, RwLock};
@@ -24,6 +25,10 @@ use std::ops::Add;
 use tokio::time::{Duration, Instant};
 
 lazy_static! {
+    static ref GIT_INDEX_DIR: &'static str =
+        Box::leak(env::var("GIT_INDEX_DIR").unwrap().into_boxed_str());
+    static ref DL_FORMAT: &'static str =
+        Box::leak(env::var("DL_FORMAT").unwrap().into_boxed_str());
     static ref ACTIVE_DOWNLOADS: Arc<RwLock<HashMap<CrateReq, Arc<Crate>>>> =
         Arc::new(RwLock::new(HashMap::new()));
 }
@@ -77,7 +82,7 @@ async fn main() -> std::io::Result<()> {
     }
     tokio::spawn(async move {
         let gi = GitIndex::new(
-            "/var/www/git/crates.io-index",
+            &GIT_INDEX_DIR,
             &Config {
                 dl: "https://static.crates-io.cn/{crate}/{version}".to_string(),
                 ..Default::default()
