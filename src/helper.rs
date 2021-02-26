@@ -8,7 +8,10 @@ use tokio_stream::StreamExt;
 use crate::error::Error;
 use crate::ACTIVE_DOWNLOADS;
 use reqwest::StatusCode;
+#[cfg(feature = "upyun-oss")]
 use upyun::{Operator, Upyun};
+#[cfg(feature = "obs")]
+use crate::simple_obs::{Bucket, IamProvider, AutoRefreshingProvider, ProvideObsCredentials, Ssl};
 
 #[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
 pub struct CrateReq {
@@ -20,6 +23,9 @@ pub struct CrateReq {
 
 lazy_static! {
     static ref CLIENT: reqwest::Client = reqwest::Client::new();
+}
+#[cfg(feature = "upyun-oss")]
+lazy_static! {
     static ref UPYUN_NAME: &'static str =
         Box::leak(env::var("UPYUN_NAME").unwrap().into_boxed_str());
     static ref UPYUN_TOKEN: &'static str =
@@ -27,6 +33,17 @@ lazy_static! {
     static ref UPYUN_BUCKET: &'static str =
         Box::leak(env::var("UPYUN_BUCKET").unwrap().into_boxed_str());
     static ref UPYUN: Upyun = Upyun::new(Operator::new(&UPYUN_NAME, &UPYUN_TOKEN));
+
+}
+#[cfg(feature = "obs")]
+lazy_static! {
+    static ref OBS_BUCKET_NAME: &'static str =
+        Box::leak(env::var("OBS_BUCKET_NAME").unwrap().into_boxed_str());
+    static ref OBS_ENDPOINT: &'static str =
+        Box::leak(env::var("OBS_ENDPOINT").unwrap().into_boxed_str());
+    static ref OBS_CREDENTIALS: AutoRefreshingProvider<IamProvider> =
+        AutoRefreshingProvider::new(IamProvider::new());
+    static ref OBS_BUCKET: Bucket = Bucket::new(&OBS_BUCKET_NAME, &OBS_ENDPOINT, Ssl::Yes);
 }
 
 #[derive(Clone, Debug)]
@@ -95,9 +112,16 @@ impl Crate {
             }
             let buffer = write_buffer.read().await.clone().freeze();
             debug!("{:?} download complete", krate_req_key);
-            let mut counter = 10;
+            let mut counter: i32 = 10;
             while counter > 0 {
-                if let Err(e) = UPYUN.put_file(*UPYUN_BUCKET, &key, buffer.clone()).await {
+                #[cfg(feature = "obs")]
+                let result = match OBS_CREDENTIALS.credentials().await {
+                    Ok(credentials) => OBS_BUCKET.put(&key, buffer.clone(), &credentials).await.err(),
+                    Err(e) => Some(e)
+                };
+                #[cfg(feature = "upyun-oss")]
+                let result = UPYUN.put_file(*UPYUN_BUCKET, &key, buffer.clone()).await.err();
+                if let Some(e) = result {
                     error!("retry attempt {}:{}", 10 - counter, e);
                     counter -= 1;
                     continue;
