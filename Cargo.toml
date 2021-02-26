@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [features]
 systemd-integration = ["systemd"]
-upyun-oss = []
+upyun-oss = ["upyun"]
 obs = ["chrono", "hmac", "sha-1", "md-5", "base64"]
 
 [dependencies]
@@ -48,6 +48,7 @@ features = ["derive"]
 [dependencies.upyun]
 version = "0.1.0"
 path = "upyun"
+optional = true
 
 [dependencies.easy-git]
 version = "0.1.0"
