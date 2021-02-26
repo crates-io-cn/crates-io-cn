@@ -122,7 +122,7 @@ pub struct AutoRefreshingProvider<P: ProvideObsCredentials> {
 }
 
 impl<P: ProvideObsCredentials> AutoRefreshingProvider<P> {
-    pub async fn new(provider: P) -> AutoRefreshingProvider<P> {
+    pub fn new(provider: P) -> AutoRefreshingProvider<P> {
         AutoRefreshingProvider {
             cached_credentials: Default::default(),
             credentials_provider: provider,

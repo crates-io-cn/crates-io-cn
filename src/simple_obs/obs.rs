@@ -77,7 +77,7 @@ impl Bucket {
         let mut canonical_headers = String::new();
         let request = if let Some(ref token) = creds.security_token() {
             canonical_headers
-                .push_str(format!("{}:{}\n", "x-obs-security-token", value).as_ref());
+                .push_str(format!("{}:{}\n", "x-obs-security-token", token).as_ref());
             request.header("x-obs-security-token", token)
         } else {
             request
