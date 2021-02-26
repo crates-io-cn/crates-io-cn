@@ -21,7 +21,7 @@ mod simple_obs;
 
 use crate::index::{Config, GitIndex};
 use helper::{Crate, CrateReq};
-use std::ops::Add;
+use std::ops::{Add, Deref};
 use tokio::time::{Duration, Instant};
 
 lazy_static! {
@@ -82,7 +82,7 @@ async fn main() -> std::io::Result<()> {
     }
     tokio::spawn(async move {
         let gi = GitIndex::new(
-            &GIT_INDEX_DIR,
+            GIT_INDEX_DIR.deref(),
             &Config {
                 dl: "https://static.crates-io.cn/{crate}/{version}".to_string(),
                 ..Default::default()
