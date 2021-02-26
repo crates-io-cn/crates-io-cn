@@ -54,7 +54,7 @@ impl Default for Config {
 
 impl GitIndex {
     pub fn new<P: AsRef<Path>>(path: P, config: &Config) -> Result<Self, Error> {
-        let repo = Repository::open(&path).or_else(|_| Repository::clone(&UPSTREAM, "index"))?;
+        let repo = Repository::open(&path).or_else(|_| Repository::clone(&UPSTREAM, &path))?;
         let config_file = File::open(path.as_ref().join("config.json"))?;
         let local_config: Config = serde_json::from_reader(config_file)?;
         if local_config != *config {
