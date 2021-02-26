@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use derive_more::{Display, Error, From};
 
 pub type Result<T> = std::result::Result<T, Error>;
