@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 [features]
 systemd-integration = ["systemd"]
 upyun-oss = ["upyun"]
-obs = ["chrono", "hmac", "sha-1", "md-5", "base64"]
+obs = ["chrono", "hmac", "sha-1", "md-5", "base64", "reqwest/json"]
 
 [dependencies]
 log = "0.4"
