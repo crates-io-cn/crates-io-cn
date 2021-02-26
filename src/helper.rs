@@ -156,7 +156,7 @@ impl Crate {
                     }
                 }
                 info!("{}/{}", ptr, krate.content_length);
-                if ptr == krate.content_length || notify.changed().await.is_ok() {
+                if ptr == krate.content_length || notify.changed().await.is_err() {
                     break;
                 }
             }
