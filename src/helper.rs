@@ -51,7 +51,7 @@ pub struct Crate {
     name: String,
     version: String,
     content_type: String,
-    content_length: usize,
+    pub content_length: usize,
     pub buffer: Arc<RwLock<BytesMut>>,
     pub notify: watch::Receiver<usize>,
     ptr: usize,
