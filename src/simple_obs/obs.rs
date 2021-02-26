@@ -1,13 +1,12 @@
 // Modified from https://github.com/mozilla/sccache/blob/master/src/simples3/s3.rs
 use core::fmt;
 
+use bytes::Bytes;
 use hmac::{Hmac, NewMac, Mac};
 use sha1::Sha1;
-use md5::Md5;
-type HmacSha1 = Hmac<Sha1>;
+use reqwest::Response;
 
 use super::credentials::*;
-use reqwest::Response;
 
 #[derive(Debug, Copy, Clone)]
 #[allow(dead_code)]
@@ -55,16 +54,16 @@ impl fmt::Display for Bucket {
 }
 
 impl Bucket {
-    pub fn new(name: &str, endpoint: &str, ssl: Ssl) -> Result<Bucket> {
+    pub fn new(name: &str, endpoint: &str, ssl: Ssl) -> Bucket {
         let base_url = base_url(&endpoint, ssl);
-        Ok(Bucket {
+        Bucket {
             name: name.to_owned(),
             base_url,
             client: reqwest::Client::new(),
-        })
+        }
     }
 
-    pub async fn put(&self, key: &str, content: Vec<u8>, creds: &ObsCredentials) -> Result<Response> {
+    pub async fn put(&self, key: &str, content: Bytes, creds: &ObsCredentials) -> Result<Response> {
         use chrono::Utc;
         use reqwest::header;
 

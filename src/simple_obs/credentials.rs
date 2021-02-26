@@ -2,7 +2,6 @@
 
 use chrono::{DateTime, Utc, offset, Duration};
 use async_trait::async_trait;
-use std::env::var;
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -25,9 +24,6 @@ pub struct ObsCredentials {
 }
 
 impl ObsCredentials {
-    pub fn new(access: String, secret: String, security_token: Option<String>, expires_at: DateTime<Utc>) -> Self {
-        ObsCredentials { access, secret, security_token, expires_at }
-    }
     pub fn access(&self) -> &str {
         &self.access
     }
@@ -44,7 +40,7 @@ impl ObsCredentials {
     fn credentials_are_expired(&self) -> bool {
         // This is a rough hack to hopefully avoid someone requesting creds then sitting on them
         // before issuing the request:
-        self.expires_at < offset::Utc::now() + Duration::seconds(20)
+        self.expires_at() < offset::Utc::now() + Duration::seconds(20)
     }
 }
 
@@ -109,9 +105,8 @@ impl ProvideObsCredentials for IamProvider {
     }
 }
 
-use std::cell::{RefCell, Ref};
+use std::cell::RefCell;
 use tokio::sync::Mutex;
-use std::ops::Deref;
 
 /// Wrapper for ProvideAwsCredentials that caches the credentials returned by the
 /// wrapped provider.  Each time the credentials are accessed, they are checked to see if
