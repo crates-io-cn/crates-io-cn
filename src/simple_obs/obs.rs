@@ -102,8 +102,8 @@ impl Bucket {
 
         let result = request.send().await?;
         let headers = result.headers();
-        let request_id = headers.get("x-obs-request-id").map_or_else("null", |h| h.to_str().unwrap_or("invalid"));
-        let obs_id = headers.get("x-obs-id-2").map_or_else("null", |h| h.to_str().unwrap_or("invalid"));
+        let request_id = headers.get("x-obs-request-id").map_or_else(|| "null", |h| h.to_str().unwrap_or("invalid"));
+        let obs_id = headers.get("x-obs-id-2").map_or_else(|| "null", |h| h.to_str().unwrap_or("invalid"));
         trace!("obs result: [{}], x-obs-request-id: {:?}, x-obs-id-2: {:?}",
                result.status(),
                request_id,
