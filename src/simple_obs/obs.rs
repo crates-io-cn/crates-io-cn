@@ -44,6 +44,7 @@ fn signature(string_to_sign: &str, signing_key: &str) -> String {
 pub struct Bucket {
     name: String,
     base_url: String,
+    host: String,
     client: reqwest::Client,
 }
 
@@ -59,6 +60,7 @@ impl Bucket {
         Bucket {
             name: name.to_owned(),
             base_url,
+            host: format!("{}.{}", &name, &endpoint),
             client: reqwest::Client::new(),
         }
     }
@@ -92,12 +94,22 @@ impl Bucket {
             creds,
         );
         let request = request.header(header::DATE, date)
+            .header(header::HOST, &self.host)
             .header(header::CONTENT_TYPE, content_type)
            .header(header::CONTENT_LENGTH, content.len())
            .header(header::AUTHORIZATION, auth)
            .body(content);
 
-        Ok(request.send().await?)
+        let result = request.send().await?;
+        let headers = result.headers();
+        let request_id = headers.get("x-obs-request-id").map_or_else("null", |h| h.to_str().unwrap_or("invalid"));
+        let obs_id = headers.get("x-obs-id-2").map_or_else("null", |h| h.to_str().unwrap_or("invalid"));
+        trace!("obs result: [{}], x-obs-request-id: {:?}, x-obs-id-2: {:?}",
+               result.status(),
+               request_id,
+               obs_id
+        );
+        Ok(result)
     }
 
     /// https://support.huaweicloud.com/api-obs/obs_04_0010.html
