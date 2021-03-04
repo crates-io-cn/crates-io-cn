@@ -1,7 +1,7 @@
 // Modified from https://github.com/mozilla/sccache/blob/master/src/simples3/credential.rs
 
-use chrono::{DateTime, Utc, offset, Duration};
 use async_trait::async_trait;
+use chrono::{offset, DateTime, Duration, Utc};
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -61,7 +61,7 @@ const OBS_IAM_CREDENTIALS_URL: &str = "http://169.254.169.254/openstack/latest/s
 impl IamProvider {
     pub fn new() -> Self {
         IamProvider {
-            client: reqwest::Client::new()
+            client: reqwest::Client::new(),
         }
     }
 }
@@ -87,14 +87,21 @@ impl ProvideObsCredentials for IamProvider {
         use std::str::FromStr;
 
         let OpenStackResponseDeWrapper {
-            credential: OpenStackResponseDe {
-                access, secret, security_token, expires_at
-            }
-        } = self.client
+            credential:
+                OpenStackResponseDe {
+                    access,
+                    secret,
+                    security_token,
+                    expires_at,
+                },
+        } = self
+            .client
             .get(OBS_IAM_CREDENTIALS_URL)
             .header(header::CONNECTION, "close")
-            .send().await?
-            .json().await?;
+            .send()
+            .await?
+            .json()
+            .await?;
 
         Ok(ObsCredentials {
             access,
@@ -138,11 +145,11 @@ impl<P: ProvideObsCredentials> ProvideObsCredentials for AutoRefreshingProvider<
                 Ok(credentials) => {
                     guard.replace(Some(credentials.clone()));
                     Ok(credentials)
-                },
-                Err(e) => Err(e)
+                }
+                Err(e) => Err(e),
             }
         } else {
             Ok(guard.borrow().as_ref().unwrap().clone())
-        }
+        };
     }
 }

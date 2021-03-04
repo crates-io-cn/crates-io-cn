@@ -5,8 +5,8 @@ extern crate lazy_static;
 
 use actix_web::middleware::Logger;
 use actix_web::{get, web, App, HttpResponse, HttpServer};
-use std::env;
 use std::collections::HashMap;
+use std::env;
 use std::sync::Arc;
 use tokio::sync::{mpsc::unbounded_channel, RwLock};
 
@@ -14,10 +14,10 @@ mod error;
 mod helper;
 #[allow(dead_code)]
 mod index;
-#[cfg(all(feature = "systemd-integration", target_os = "linux"))]
-mod systemd;
 #[cfg(feature = "obs")]
 mod simple_obs;
+#[cfg(all(feature = "systemd-integration", target_os = "linux"))]
+mod systemd;
 
 use crate::index::{Config, GitIndex};
 use helper::{Crate, CrateReq};
@@ -27,8 +27,7 @@ use tokio::time::{Duration, Instant};
 lazy_static! {
     static ref GIT_INDEX_DIR: &'static str =
         Box::leak(env::var("GIT_INDEX_DIR").unwrap().into_boxed_str());
-    static ref DL_FORMAT: &'static str =
-        Box::leak(env::var("DL_FORMAT").unwrap().into_boxed_str());
+    static ref DL_FORMAT: &'static str = Box::leak(env::var("DL_FORMAT").unwrap().into_boxed_str());
     static ref ACTIVE_DOWNLOADS: Arc<RwLock<HashMap<CrateReq, Arc<Crate>>>> =
         Arc::new(RwLock::new(HashMap::new()));
 }

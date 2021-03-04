@@ -2,9 +2,9 @@
 use core::fmt;
 
 use bytes::Bytes;
-use hmac::{Hmac, NewMac, Mac};
-use sha1::Sha1;
+use hmac::{Hmac, Mac, NewMac};
 use reqwest::Response;
+use sha1::Sha1;
 
 use super::credentials::*;
 
@@ -77,8 +77,7 @@ impl Bucket {
         let date = Utc::now().format("%a, %d %b %Y %H:%M:%S GMT").to_string();
         let mut canonical_headers = String::new();
         let request = if let Some(ref token) = creds.security_token() {
-            canonical_headers
-                .push_str(format!("{}:{}\n", "x-obs-security-token", token).as_ref());
+            canonical_headers.push_str(format!("{}:{}\n", "x-obs-security-token", token).as_ref());
             request.header("x-obs-security-token", token)
         } else {
             request
@@ -93,21 +92,27 @@ impl Bucket {
             content_type,
             creds,
         );
-        let request = request.header(header::DATE, date)
+        let request = request
+            .header(header::DATE, date)
             .header(header::HOST, &self.host)
             .header(header::CONTENT_TYPE, content_type)
-           .header(header::CONTENT_LENGTH, content.len())
-           .header(header::AUTHORIZATION, auth)
-           .body(content);
+            .header(header::CONTENT_LENGTH, content.len())
+            .header(header::AUTHORIZATION, auth)
+            .body(content);
 
         let result = request.send().await?;
         let headers = result.headers();
-        let request_id = headers.get("x-obs-request-id").map_or_else(|| "null", |h| h.to_str().unwrap_or("invalid"));
-        let obs_id = headers.get("x-obs-id-2").map_or_else(|| "null", |h| h.to_str().unwrap_or("invalid"));
-        trace!("obs result: [{}], x-obs-request-id: {:?}, x-obs-id-2: {:?}",
-               result.status(),
-               request_id,
-               obs_id
+        let request_id = headers
+            .get("x-obs-request-id")
+            .map_or_else(|| "null", |h| h.to_str().unwrap_or("invalid"));
+        let obs_id = headers
+            .get("x-obs-id-2")
+            .map_or_else(|| "null", |h| h.to_str().unwrap_or("invalid"));
+        trace!(
+            "obs result: [{}], x-obs-request-id: {:?}, x-obs-id-2: {:?}",
+            result.status(),
+            request_id,
+            obs_id
         );
         Ok(result)
     }
