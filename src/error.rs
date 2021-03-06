@@ -1,17 +1,25 @@
 #![allow(dead_code)]
 
-use derive_more::{Display, Error, From};
+use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Display, From, Error)]
+#[derive(Debug, Error)]
 pub enum Error {
-    IO(std::io::Error),
-    Reqwest(reqwest::Error),
-    Header(reqwest::header::ToStrError),
-    SerdeJSON(serde_json::Error),
-    Git2(git2::Error),
-    EasyGit(easy_git::Error),
+    #[error(transparent)]
+    IO(#[from] std::io::Error),
+    #[error(transparent)]
+    Reqwest(#[from] reqwest::Error),
+    #[error(transparent)]
+    Header(#[from] reqwest::header::ToStrError),
+    #[error(transparent)]
+    SerdeJSON(#[from] serde_json::Error),
+    #[error(transparent)]
+    Git2(#[from] git2::Error),
+    #[error(transparent)]
+    EasyGit(#[from] easy_git::Error),
+    #[error("missing field")]
     MissingField,
+    #[error("fail to fetch")]
     FetchFail,
 }
