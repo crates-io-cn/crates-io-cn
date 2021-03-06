@@ -18,6 +18,7 @@ mod index;
 mod simple_obs;
 #[cfg(all(feature = "systemd-integration", target_os = "linux"))]
 mod systemd;
+mod easy_git;
 
 use crate::index::{Config, GitIndex};
 use helper::{Crate, CrateReq};

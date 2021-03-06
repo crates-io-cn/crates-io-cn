@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate log;
-
 use git2::{FileFavor, MergeOptions, Oid, RebaseOptions, Repository, ResetType, Tree};
 use std::path::Path;
 

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 use crate::helper::CrateReq;
-use easy_git::EasyGit;
+use crate::easy_git::EasyGit;
 
 use std::env;
 use std::io::Write;

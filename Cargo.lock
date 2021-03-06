@@ -534,7 +534,6 @@ dependencies = [
  "derive_more",
  "directories",
  "dotenv",
- "easy-git",
  "futures",
  "git2",
  "hmac",
@@ -662,15 +661,6 @@ name = "dtoa"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88d7ed2934d741c6b37e33e3832298e8850b53fd2d2bea03873375596c7cea4e"
-
-[[package]]
-name = "easy-git"
-version = "0.1.0"
-dependencies = [
- "derive_more",
- "git2",
- "log",
-]
 
 [[package]]
 name = "either"

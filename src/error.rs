@@ -17,7 +17,7 @@ pub enum Error {
     #[error(transparent)]
     Git2(#[from] git2::Error),
     #[error(transparent)]
-    EasyGit(#[from] easy_git::Error),
+    EasyGit(#[from] crate::easy_git::Error),
     #[error("missing field")]
     MissingField,
     #[error("fail to fetch")]

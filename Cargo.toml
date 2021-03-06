@@ -59,9 +59,5 @@ version = "0.1.0"
 path = "upyun"
 optional = true
 
-[dependencies.easy-git]
-version = "0.1.0"
-path = "easy-git"
-
 [workspace]
-members = ["upyun", "easy-git"]
+members = ["upyun"]
