@@ -4,14 +4,14 @@ use std::env;
 use std::sync::Arc;
 use tokio::sync::{mpsc, watch, RwLock};
 use tokio_stream::StreamExt;
+use reqwest::StatusCode;
 
 use crate::error::Error;
+use crate::ACTIVE_DOWNLOADS;
 #[cfg(feature = "obs")]
 use crate::simple_obs::{AutoRefreshingProvider, Bucket, IamProvider, ProvideObsCredentials, Ssl};
-use crate::ACTIVE_DOWNLOADS;
-use reqwest::StatusCode;
-#[cfg(feature = "upyun-oss")]
-use upyun::{Operator, Upyun};
+#[cfg(feature = "upyun")]
+use crate::upyun::{Operator, Upyun};
 
 #[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
 pub struct CrateReq {
@@ -24,7 +24,7 @@ pub struct CrateReq {
 lazy_static! {
     static ref CLIENT: reqwest::Client = reqwest::Client::new();
 }
-#[cfg(feature = "upyun-oss")]
+#[cfg(feature = "upyun")]
 lazy_static! {
     static ref UPYUN_NAME: &'static str =
         Box::leak(env::var("UPYUN_NAME").unwrap().into_boxed_str());
@@ -121,7 +121,7 @@ impl Crate {
                         .err(),
                     Err(e) => Some(e),
                 };
-                #[cfg(feature = "upyun-oss")]
+                #[cfg(feature = "upyun")]
                 let result = UPYUN
                     .put_file(*UPYUN_BUCKET, &key, buffer.clone())
                     .await

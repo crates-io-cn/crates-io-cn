@@ -1,8 +1,4 @@
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate lazy_static;
-
+#![allow(dead_code)]
 use base64::encode as b64enc;
 use chrono::{DateTime, Utc};
 

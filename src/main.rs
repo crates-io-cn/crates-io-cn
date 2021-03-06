@@ -16,6 +16,8 @@ mod helper;
 mod index;
 #[cfg(feature = "obs")]
 mod simple_obs;
+#[cfg(feature = "upyun")]
+mod upyun;
 #[cfg(all(feature = "systemd-integration", target_os = "linux"))]
 mod systemd;
 mod easy_git;
